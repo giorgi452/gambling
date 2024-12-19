@@ -1,6 +1,13 @@
+use std::process::exit;
+
 use raylib::prelude::*;
 
 use crate::game::gamescene::Scene;
+
+pub enum ButtonType {
+    Start,
+    Exit,
+}
 
 pub struct Menu {
     pub buttons: Vec<Button>,
@@ -10,6 +17,7 @@ pub struct Button {
     pub rec: Rectangle,
     pub color: Color,
     pub text: &'static str,
+    pub btype: ButtonType,
 }
 
 impl Menu {
@@ -21,12 +29,24 @@ impl Menu {
         for i in 0..self.buttons.len() {
             self.buttons[i].draw(d, game_scene);
         }
+        d.draw_text(
+            "Gambling",
+            (get_monitor_width(get_current_monitor()) / 2) as i32 - (400 / 2) as i32,
+            (get_monitor_height(get_current_monitor()) / 2) as i32 - (300 / 2) as i32,
+            100,
+            Color::RED,
+        );
     }
 }
 
 impl Button {
-    pub fn new(rec: Rectangle, color: Color, text: &'static str) -> Self {
-        Self { rec, color, text }
+    pub fn new(rec: Rectangle, color: Color, text: &'static str, btype: ButtonType) -> Self {
+        Self {
+            rec,
+            color,
+            text,
+            btype,
+        }
     }
 
     pub fn draw(&mut self, d: &mut RaylibDrawHandle<'_>, game_scene: &mut Scene) {
@@ -38,10 +58,22 @@ impl Button {
             40,
             Color::RED,
         );
-        if d.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_LEFT) {
-            let mouse_position = d.get_mouse_position();
-            if self.rec.check_collision_point_rec(mouse_position) {
-                *game_scene = Scene::ActGame;
+        match self.btype {
+            ButtonType::Start => {
+                if d.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_LEFT) {
+                    let mouse_position = d.get_mouse_position();
+                    if self.rec.check_collision_point_rec(mouse_position) {
+                        *game_scene = Scene::ActGame;
+                    }
+                }
+            }
+            ButtonType::Exit => {
+                if d.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_LEFT) {
+                    let mouse_position = d.get_mouse_position();
+                    if self.rec.check_collision_point_rec(mouse_position) {
+                        exit(0);
+                    }
+                }
             }
         }
     }
