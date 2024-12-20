@@ -1,3 +1,4 @@
+use actual_game::ActGame;
 use game::gamescene::Scene;
 use menu::{Button, ButtonType, Menu};
 use raylib::prelude::*;
@@ -14,6 +15,8 @@ fn main() {
     rl.toggle_borderless_windowed();
     rl.set_window_focused();
     rl.set_target_fps(60);
+
+    let seven_image = rl.load_texture(&thread, "resources/Seven.png").unwrap();
 
     let start_button_rec = Rectangle::new(
         (get_monitor_width(get_current_monitor()) / 2) as f32 - (300 / 2) as f32,
@@ -112,9 +115,18 @@ fn main() {
                             PRESSED_KEYS.pop();
                         }
                     } else {
-                        d.draw_text(&MONEY_TO_BET.to_string(), 10, 10, 100, Color::RED);
+                        ActGame::new(MONEY_TO_BET, &seven_image).draw(&mut d, &mut game_scene);
                     }
                 }
+            }
+            Scene::Won => {
+                d.draw_text(
+                    "You Won!",
+                    (d.get_screen_width() / 2) - 500,
+                    (d.get_screen_height() / 2) - 300,
+                    300,
+                    Color::RED,
+                );
             }
         }
     }
