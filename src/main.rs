@@ -1,5 +1,5 @@
 use actual_game::ActGame;
-use game::gamescene::Scene;
+use game::{dec_vars, gamescene::Scene};
 use menu::{Button, ButtonType, Menu};
 use raylib::prelude::*;
 
@@ -11,121 +11,64 @@ fn main() {
     let (mut rl, thread) = raylib::init().title("Gambling").build();
     let mut game_scene: Scene = Scene::MainMenu;
 
+    // Window Options
     rl.toggle_fullscreen();
     rl.toggle_borderless_windowed();
     rl.set_window_focused();
     rl.set_target_fps(60);
 
-    let seven_image = rl.load_texture(&thread, "resources/Seven.png").unwrap();
-
-    let start_button_rec = Rectangle::new(
-        (get_monitor_width(get_current_monitor()) / 2) as f32 - (300 / 2) as f32,
-        (get_monitor_height(get_current_monitor()) / 2) as f32 - (50 / 2) as f32,
-        300 as f32,
-        50 as f32,
-    );
-
-    let exit_button_rec = Rectangle::new(
-        (get_monitor_width(get_current_monitor()) / 2) as f32 - (300 / 2) as f32,
-        (get_monitor_height(get_current_monitor()) / 2) as f32 + (65 / 2) as f32,
-        300 as f32,
-        50 as f32,
-    );
+    let (start_button_rec, exit_button_rec, mut money_to_bet, mut keyboard) = dec_vars();
+    let mut act_game = ActGame::new(&mut money_to_bet);
 
     while !rl.window_should_close() {
         let mut d = rl.begin_drawing(&thread);
 
-        d.clear_background(Color::BLUE);
+        d.clear_background(Color::new(0x0D, 0x0C, 0x12, 0xFF));
         match game_scene {
             Scene::MainMenu => {
+                *act_game.money_to_bet = 0;
                 Menu::new(vec![
                     Button::new(
                         start_button_rec,
-                        Color::DARKBLUE,
+                        Color::new(0x19, 0x1A, 0x28, 0xFF),
                         "Start",
                         ButtonType::Start,
                     ),
-                    Button::new(exit_button_rec, Color::DARKBLUE, "Exit", ButtonType::Exit),
+                    Button::new(
+                        exit_button_rec,
+                        Color::new(0x19, 0x1A, 0x28, 0xFF),
+                        "Exit",
+                        ButtonType::Exit,
+                    ),
                 ])
                 .draw(&mut d, &mut game_scene);
             }
             Scene::ActGame => {
-                static mut MONEY_TO_BET: i32 = 0;
-                static mut PRESSED_KEYS: Vec<i32> = Vec::new();
-                unsafe {
-                    if MONEY_TO_BET == 0 {
-                        d.draw_text(
-                            "Bet",
-                            (d.get_screen_width() / 2) - (70 / 2),
-                            (d.get_screen_height() / 2) - (500 / 2),
-                            70,
-                            Color::RED,
-                        );
-
-                        d.draw_rectangle(
-                            (d.get_screen_width() / 2) - (300 / 2),
-                            (d.get_screen_height() / 2) - (300 / 2),
-                            300,
-                            50,
-                            Color::DARKBLUE,
-                        );
-
-                        if d.is_key_pressed(KeyboardKey::KEY_ZERO) {
-                            PRESSED_KEYS.push(0);
-                        } else if d.is_key_pressed(KeyboardKey::KEY_ONE) {
-                            PRESSED_KEYS.push(1);
-                        } else if d.is_key_pressed(KeyboardKey::KEY_TWO) {
-                            PRESSED_KEYS.push(2);
-                        } else if d.is_key_pressed(KeyboardKey::KEY_THREE) {
-                            PRESSED_KEYS.push(3);
-                        } else if d.is_key_pressed(KeyboardKey::KEY_FOUR) {
-                            PRESSED_KEYS.push(4);
-                        } else if d.is_key_pressed(KeyboardKey::KEY_FIVE) {
-                            PRESSED_KEYS.push(5);
-                        } else if d.is_key_pressed(KeyboardKey::KEY_SIX) {
-                            PRESSED_KEYS.push(6);
-                        } else if d.is_key_pressed(KeyboardKey::KEY_SEVEN) {
-                            PRESSED_KEYS.push(7);
-                        } else if d.is_key_pressed(KeyboardKey::KEY_EIGHT) {
-                            PRESSED_KEYS.push(8);
-                        } else if d.is_key_pressed(KeyboardKey::KEY_NINE) {
-                            PRESSED_KEYS.push(9);
-                        } else if d.is_key_pressed(KeyboardKey::KEY_BACKSPACE) {
-                            PRESSED_KEYS.pop();
-                        } else if d.is_key_pressed(KeyboardKey::KEY_ENTER) {
-                            let moneyt_bet: String = PRESSED_KEYS
-                                .iter()
-                                .map(|v| v.to_string())
-                                .collect::<Vec<String>>()
-                                .join("");
-                            MONEY_TO_BET = i32::from_str_radix(&moneyt_bet, 10).unwrap();
-                        }
-
-                        for i in 0..PRESSED_KEYS.len() {
-                            d.draw_text(
-                                PRESSED_KEYS[i].to_string().as_str(),
-                                ((d.get_screen_width() / 2) - (300 / 2)) + (30 * i as i32),
-                                (d.get_screen_height() / 2) - (300 / 2),
-                                50,
-                                Color::RED,
-                            );
-                        }
-
-                        if PRESSED_KEYS.len() > 10 {
-                            PRESSED_KEYS.pop();
-                        }
-                    } else {
-                        ActGame::new(MONEY_TO_BET, &seven_image).draw(&mut d, &mut game_scene);
-                    }
+                if *act_game.money_to_bet == 0 {
+                    ActGame::bet(&mut *act_game.money_to_bet, &mut d, &mut keyboard);
+                } else {
+                    act_game.draw(&mut d, &mut game_scene);
                 }
             }
             Scene::Won => {
                 d.draw_text(
                     "You Won!",
-                    (d.get_screen_width() / 2) - 500,
+                    (d.get_screen_width() / 2) - 700,
                     (d.get_screen_height() / 2) - 300,
                     300,
-                    Color::RED,
+                    Color::get_color(0x3772ff),
+                );
+
+                let text = act_game.money_to_bet.to_string();
+                let text_width = d.measure_text(&text, 300);
+                let x_position = (d.get_screen_width() - text_width) / 2;
+
+                d.draw_text(
+                    &text,
+                    x_position,
+                    d.get_screen_height() / 2,
+                    300,
+                    Color::get_color(0x3772ff),
                 );
             }
         }
