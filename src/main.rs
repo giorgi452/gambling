@@ -18,7 +18,8 @@ fn main() {
     rl.set_target_fps(60);
 
     let (start_button_rec, exit_button_rec, mut money_to_bet, mut keyboard) = dec_vars();
-    let mut act_game = ActGame::new(&mut money_to_bet);
+    let mut won = 0;
+    let mut act_game = ActGame::new(&mut money_to_bet, &mut won);
 
     while !rl.window_should_close() {
         let mut d = rl.begin_drawing(&thread);
@@ -51,17 +52,51 @@ fn main() {
                 }
             }
             Scene::Won => {
-                d.draw_text(
-                    "You Won!",
-                    (d.get_screen_width() / 2) - 700,
-                    (d.get_screen_height() / 2) - 300,
-                    300,
-                    Color::get_color(0x3772ff),
-                );
-
                 let text = act_game.money_to_bet.to_string();
                 let text_width = d.measure_text(&text, 300);
                 let x_position = (d.get_screen_width() - text_width) / 2;
+
+                if *act_game.won == 2 {
+                    d.draw_text(
+                        "LLL",
+                        (d.get_screen_width() - d.measure_text("LLL", 300)) / 2,
+                        (d.get_screen_height() / 2) - 300,
+                        300,
+                        Color::get_color(0x3772ff),
+                    );
+                } else if *act_game.won == 3 {
+                    d.draw_text(
+                        "SSS",
+                        (d.get_screen_width() - d.measure_text("SSS", 300)) / 2,
+                        (d.get_screen_height() / 2) - 300,
+                        300,
+                        Color::get_color(0x3772ff),
+                    );
+                } else if *act_game.won == 4 {
+                    d.draw_text(
+                        "777",
+                        (d.get_screen_width() - d.measure_text("SSS", 300)) / 2,
+                        (d.get_screen_height() / 2) - 300,
+                        300,
+                        Color::get_color(0x3772ff),
+                    );
+                } else if *act_game.won == 5 {
+                    d.draw_text(
+                        "KKK",
+                        (d.get_screen_width() - d.measure_text("KKK", 300)) / 2,
+                        (d.get_screen_height() / 2) - 300,
+                        300,
+                        Color::get_color(0x3772ff),
+                    );
+                } else {
+                    d.draw_text(
+                        "You Won!",
+                        (d.get_screen_width() - d.measure_text(&act_game.won.to_string(), 300)) / 2,
+                        (d.get_screen_height() / 2) - 300,
+                        300,
+                        Color::get_color(0x3772ff),
+                    );
+                }
 
                 d.draw_text(
                     &text,

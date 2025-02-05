@@ -4,13 +4,15 @@ use crate::game::{gamescene::Scene, keyboard::Keyboard};
 
 pub struct ActGame<'a> {
     pub money_to_bet: &'a mut i32,
+    pub won: &'a mut i32,
     slot_rows: Vec<Slot>,
 }
 
 impl<'a> ActGame<'a> {
-    pub fn new(money_to_bet: &'a mut i32) -> Self {
+    pub fn new(money_to_bet: &'a mut i32, won: &'a mut i32) -> Self {
         Self {
             money_to_bet,
+            won,
             slot_rows: vec![
                 Slot::new(SlotType::Seven),
                 Slot::new(SlotType::Badrijani),
@@ -54,6 +56,7 @@ impl<'a> ActGame<'a> {
 
         if let Some(multiplier) = self.check_winning_conditions() {
             *self.money_to_bet *= multiplier;
+            *self.won = multiplier;
             *game_scene = Scene::Won;
         }
     }
